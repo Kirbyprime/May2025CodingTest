@@ -24,4 +24,11 @@ public static class ButtonUtils
         target.onClick.AddListener(action);
         return true;
     }
+
+    public static bool SafeSetInteractable(this Button target, bool isInteractable)
+    {
+        if (target == null || target.gameObject == null) return false;
+        target.interactable = isInteractable;
+        return true;
+    }
 }
