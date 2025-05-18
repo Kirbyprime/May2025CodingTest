@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,25 +24,23 @@ public class GamePlayScreen : ScreenBase<GamePlayScreen, GamePlayScreenDataProvi
         _closeButton.SafeAddClickListener(ExitGamePlay);
 
         GenerateMap();
-        RandomizeMap();
         StartGame();
     }
 
     private void StartGame()
     {
+        RandomizeMap();
+
         _gameTimer.SafeResetTimer();
         _gameTimer.SafeStartTimer();
 
-        if (_movesCounter != null)
-        {
-            _movesCounter.Reset();
-        }
+        _movesCounter.SafeReset();
     }
 
     private void EndGame()
     {
         _gameTimer.SafeStopTimer();
-        ConfirmationPopupDataProvider dataProvider = new("You win!", "Exit", ExitGamePlay);
+        ConfirmationPopupDataProvider dataProvider = new("You win!", "Replay", StartGame);
         UIManager.Instance.Open(dataProvider);
     }
 
@@ -111,11 +110,20 @@ public class GamePlayScreen : ScreenBase<GamePlayScreen, GamePlayScreenDataProvi
 
         _litCount = 0;
 
+        HashSet<Vector2Int> uniques = new();
         for (var i = 0; i < DataProvider.NumRandomizations; i++)
         {
             int randRow = Random.Range(0, DataProvider.GridSize - 1);
             int randCol = Random.Range(0, DataProvider.GridSize - 1);
-            _grid[randRow, randCol].Flip();
+            uniques.Add(new Vector2Int(randRow, randCol));
+        }
+
+        foreach (var position in uniques)
+        {
+            if (_grid[position.x, position.y] is Lamp valid)
+            { 
+                valid.Flip();
+            }
         }
     }
 
@@ -142,10 +150,8 @@ public class GamePlayScreen : ScreenBase<GamePlayScreen, GamePlayScreenDataProvi
     private void OnLampClicked(Lamp lamp)
     {
         if (lamp == null) return;
-        if (_movesCounter != null)
-        {
-            _movesCounter.Increment();
-        }
+        
+        _movesCounter.SafeIncrement();
         lamp.Flip();
 
         // edge case ( though I don't think it's actually possible ) for if the lamp getting triggered is the last one
